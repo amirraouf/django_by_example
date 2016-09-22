@@ -23,4 +23,6 @@
 •	 Integrating third-party applications
 
 •	 Building complex QuerySets
+
+It will be updated with rest chapters
 ***

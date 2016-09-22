@@ -1,13 +1,19 @@
 from django.shortcuts import render
-from .models import Posts
+from .models import Posts , Comment
 from django.core.paginator import Paginator , EmptyPage , PageNotAnInteger
 from django.shortcuts import get_object_or_404
-from .forms import EmailForm
+from .forms import EmailForm , CommentForm
 from django.core.mail import send_mail
+from taggit.models import Tag
 # Create your views here.
-def home(request):
-	published = Posts.published.all()
-	paginator = Paginator(published,3)
+def home(request, tag_slug=None):
+	
+	if tag_slug:
+		tag = get_object_or_404(Tag, slug=tag_slug)
+		published = Posts.objects.filter(tags__in=[tag])
+	else:
+		published = Posts.published.all()
+	paginator = Paginator(published,5)
 	page = request.GET.get('page')
 	try:
 		published = paginator.page(page)
@@ -23,10 +29,22 @@ def home(request):
 def post_detail(request,slug):
 
 	post = get_object_or_404(Posts,slug = slug)
-	print "post.slug"
+	#comments = Comment.objects.filter(post__slug=slug)
+	comments = post.comments.filter(active = True)
+	post_tags_ids = post.tags.values_list('id', flat=True)
+	similar_posts = Posts.published.filter(tags__in=post_tags_ids).exclude(slug=post.slug)
+	tags = post.tags.all()
+	if request.method == 'POST':
+		form = CommentForm(request.POST)
+		if form.is_valid():
+			form = form.save(commit=False)
+			form.post = post
+			form.save()
+	else:
+		form = CommentForm()
 	return render(request,
 		'blog/post/detail.html',
-		{'post': post}
+		{'post': post,'comments':comments,'form':form, 'tags':tags, 'similar':similar_posts}
 		)
 
 #This is home view as class based

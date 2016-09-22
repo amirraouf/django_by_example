@@ -6,6 +6,7 @@
         "**/.hg": true,
         "**/.DS_Store": true,
         "*.pyc": true,
+        "**/.pyc": true,
         "*.tmp": true
     }    
 }
